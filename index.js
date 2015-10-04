@@ -1,11 +1,10 @@
 import Rx, { Observable } from 'rx';
-import jQuery from 'jquery';
 
 function ajax(url) {
   return new Promise(
     (resolve, reject) => {
       setTimeout(() => {
-        resolve({ a: 1, b: 2, url });
+        resolve({ url });
       }, 1000)
     }
   );
