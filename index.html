@@ -10,7 +10,20 @@
   <div id="root">
     <div>
       <h3>Response</h3>
-      <ul id="response"></ul>
+      <ul id="response">
+        <div class="one">
+          <li class="info"></li>
+          <button class="close">X</button>
+        </div>
+        <div class="two">
+          <li class="info"></li>
+          <button class="close">X</button>
+        </div>
+        <div class="three">
+          <li class="info"></li>
+          <button class="close">X</button>
+        </div>
+      </ul>
 
       <button id="refresh">Refresh</button>
     </div>
@@ -21,7 +34,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs-dom/7.0.3/rx.dom.min.js"></script>
 
   <script type="text/babel">
-    console.log('Rx', Rx);
+
+    function sample(arr) {
+      return arr[Math.floor(Math.random()*arr.length)];
+    }
 
     const refreshButton = document.getElementById('refresh');
     const refreshClickStream = Rx.Observable.fromEvent(refreshButton, 'click');
@@ -38,11 +54,21 @@
         return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
       });
 
-    responseStream.subscribe(function(response) {
-      // render `response` to the DOM however you wish
-      console.log('response', response);
-      const node = document.getElementById('response')
-      node.innerHTML = response.map(user => `<li>${user.login} ${user.id}</li>`).join('');
+    ['one', 'two', 'three'].forEach(className => {
+      const node = document.getElementsByClassName(className)[0];
+
+      const closeButton = Array.from(node.childNodes).find(child => child.className === 'close');
+      const closeClickStream = Rx.Observable.fromEvent(closeButton, 'click');
+
+      const suggestionStream = closeClickStream.startWith('startup click')
+        .combineLatest(responseStream, (click, users) => sample(users))
+        .merge( refreshClickStream.map(() => null) )
+        .startWith(null);
+
+      suggestionStream.subscribe(user => {
+        const infoNode = Array.from(node.childNodes).find(child => child.className === 'info');
+        infoNode.innerHTML = user ? `${user.login} ${user.id}` : '';
+      });
     });
 
 
